@@ -1,0 +1,7 @@
+{
+  "name": "Emotion Music Player",
+  "description": "Detects human emotion from facial expressions and plays music accordingly.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
