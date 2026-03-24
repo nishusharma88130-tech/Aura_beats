@@ -9,7 +9,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 // ==========================================
 // If you are running this locally or deploying to Netlify, 
 // paste your Gemini API key between the quotes below.
-const MANUAL_GEMINI_API_KEY = "AIzaSyDpmBtgM_SdJ5xMJ0YCWXbGh0zskb2vPmo"; 
+const MANUAL_GEMINI_API_KEY = "AIzaSyA1ZTftnBidWRgdRZHAGVxxDTHrCfYFVYA"; 
 // ==========================================
 
 type Emotion = 'HAPPY' | 'SAD' | 'NEUTRAL';
