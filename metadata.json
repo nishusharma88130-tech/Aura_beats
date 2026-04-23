@@ -1,5 +1,5 @@
 {
-  "name": "Aura Beats",
+  "name": "Emotion Player",
   "description": "Detects human emotion from facial expressions and plays music accordingly.",
   "requestFramePermissions": [
     "camera"

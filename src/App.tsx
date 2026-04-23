@@ -86,10 +86,13 @@ export default function App() {
     loadModels();
 
     // Load history from local storage
-    const savedHistory = localStorage.getItem('auraBeatsHistory');
+    const savedHistory = localStorage.getItem('emotionPlayerHistory') || localStorage.getItem('auraBeatsHistory'); // Fallback for migration
     if (savedHistory) {
       try {
         setHistory(JSON.parse(savedHistory));
+        if (!localStorage.getItem('emotionPlayerHistory')) {
+             localStorage.setItem('emotionPlayerHistory', savedHistory);
+        }
       } catch (e) {
         console.error("Failed to parse history", e);
       }
@@ -105,12 +108,13 @@ export default function App() {
     };
     const updatedHistory = [newEntry, ...history].slice(0, 20); // Keep last 20
     setHistory(updatedHistory);
-    localStorage.setItem('auraBeatsHistory', JSON.stringify(updatedHistory));
+    localStorage.setItem('emotionPlayerHistory', JSON.stringify(updatedHistory));
   };
 
   const clearHistory = () => {
     setHistory([]);
-    localStorage.removeItem('auraBeatsHistory');
+    localStorage.removeItem('emotionPlayerHistory');
+    localStorage.removeItem('auraBeatsHistory'); // Clear legacy key too
   };
 
   const playSong = (playlist: Song[]) => {
@@ -120,16 +124,17 @@ export default function App() {
     setCurrentSongUrl(topSong.songUrl);
     setRecommendedPlaylist(playlist);
     setIsRedirecting(true);
-    setCountdown(3);
+    setCountdown(1); // Reduced from 3 to 1 for faster suggestion/opening
 
     // Countdown logic
-    let currentCount = 3;
+    let currentCount = 1;
     const interval = setInterval(() => {
       currentCount -= 1;
       setCountdown(currentCount);
       if (currentCount <= 0) {
         clearInterval(interval);
-        window.location.href = topSong.songUrl;
+        window.open(topSong.songUrl, '_blank'); // Open in new tab so they don't lose the app
+        setIsRedirecting(false); // Reset UI so they can see the play button if they return
       }
     }, 1000);
   };
@@ -156,7 +161,7 @@ export default function App() {
     const randomDecade = decades[Math.floor(Math.random() * decades.length)];
     
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: `I am feeling ${emo}. Recommend a UNIQUE Mini Playlist of exactly 3 Hindi songs (from the ${randomDecade}) that match this emotion.
       - If HAPPY: Recommend upbeat, energetic, joyful, or dance Hindi music.
       - If SAD: Recommend melancholic, emotional, slow, or heartbreak Hindi music.
@@ -164,7 +169,7 @@ export default function App() {
       
       Return ONLY the song name and artist. Do NOT generate URLs.`,
       config: {
-        temperature: 0.7,
+        temperature: 0.9,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -234,8 +239,8 @@ export default function App() {
       img.src = imageSrc;
       await new Promise((resolve) => { img.onload = resolve; });
 
-      // Use a smaller inputSize for speed, and lower scoreThreshold for better detection rate
-      const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.1 });
+      // Use a smaller inputSize for extreme speed (128 instead of 224), and low scoreThreshold
+      const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.1 });
       const detections = await faceapi.detectSingleFace(img, options).withFaceExpressions();
 
       if (!detections) {
@@ -396,7 +401,7 @@ export default function App() {
         <button 
           onClick={() => setShowInfo(true)}
           className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-md shadow-xl"
-          title="About Aura Beats"
+          title="About Emotion Player"
         >
           <Info className="w-5 h-5" />
         </button>
@@ -411,8 +416,8 @@ export default function App() {
         >
           {/* Animated Wavy Gradient Logo */}
           <div className="relative inline-block mb-2 md:mb-4">
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-wave">
-              Aura Beats
+            <h1 className="pb-2 md:pb-4 text-5xl sm:text-6xl md:text-8xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-wave">
+              Emotion Player
             </h1>
             <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-20 blur-2xl animate-wave -z-10 rounded-full"></div>
           </div>
@@ -465,7 +470,7 @@ export default function App() {
             {/* Webcam / Scanner Card */}
             <div className="p-4 sm:p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-2xl shadow-2xl flex flex-col">
               <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className="text-lg md:text-xl font-medium tracking-tight">Aura Scanner</h2>
+                <h2 className="text-lg md:text-xl font-medium tracking-tight">Emotion Scanner</h2>
               </div>
 
               <div className="relative rounded-2xl overflow-hidden bg-black/50 min-h-[250px] sm:min-h-[300px] border border-white/5 flex flex-col items-center justify-center">
@@ -524,7 +529,7 @@ export default function App() {
                           className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center"
                         >
                           <Loader2 className="w-10 h-10 text-white animate-spin mb-4" />
-                          <p className="text-sm font-medium tracking-widest uppercase text-white/80">Reading Aura...</p>
+                          <p className="text-sm font-medium tracking-widest uppercase text-white/80">Reading Emotion...</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -537,7 +542,7 @@ export default function App() {
                 disabled={isAnalyzing || !isCameraRequested || hasCameraPermission === false || isRedirecting || !isModelsLoaded}
                 className="mt-6 w-full py-4 rounded-xl bg-white text-black font-semibold tracking-wide hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
-                {!isModelsLoaded ? 'Loading AI Models...' : isAnalyzing ? 'Analyzing...' : 'Scan My Aura'}
+                {!isModelsLoaded ? 'Loading AI Models...' : isAnalyzing ? 'Analyzing...' : 'Scan My Emotion'}
               </button>
             </div>
 
@@ -596,7 +601,7 @@ export default function App() {
                   </div>
                   
                   <h3 className="text-2xl font-semibold tracking-tight mb-2">
-                    {emotion ? `Aura: ${emotion}` : 'Awaiting Input'}
+                    {emotion ? `Emotion: ${emotion}` : 'Awaiting Input'}
                   </h3>
                   <p className="text-white/60 mb-8">
                     {config.text}
@@ -717,18 +722,18 @@ export default function App() {
                 <Info className="w-6 h-6 text-indigo-400" />
               </div>
               
-              <h2 className="text-2xl font-bold mb-2">About Aura Beats</h2>
+              <h2 className="text-2xl font-bold mb-2">About Emotion Player</h2>
               <p className="text-indigo-400 font-medium mb-6">MCA Final Year Project</p>
               
               <div className="space-y-4 text-white/70 text-sm leading-relaxed">
                 <p>
-                  Created by <strong className="text-white">Nisha Sharma (Nishu)</strong>, Aura Beats explores the intersection of artificial intelligence, facial emotion recognition, and music therapy.
+                  Created by <strong className="text-white">Nisha Sharma (Nishu)</strong>, Emotion Player explores the intersection of artificial intelligence, facial emotion recognition, and music therapy.
                 </p>
                 <p>
                   By analyzing micro-expressions in real-time using advanced AI models, the system maps human emotions to curated musical frequencies and genres. It generates personalized mini-playlists designed to resonate perfectly with your current state of mind.
                 </p>
                 <p>
-                  Whether you need an upbeat track to match your joy, or a melancholic melody to accompany a rainy day, Aura Beats provides a seamless, emotionally-aware auditory experience.
+                  Whether you need an upbeat track to match your joy, or a melancholic melody to accompany a rainy day, Emotion Player provides a seamless, emotionally-aware auditory experience.
                 </p>
               </div>
               
@@ -777,7 +782,7 @@ export default function App() {
                   <div className="h-full flex flex-col items-center justify-center text-white/30 text-center">
                     <History className="w-12 h-12 mb-4 opacity-20" />
                     <p>No history yet.</p>
-                    <p className="text-sm mt-2">Scan your aura to see past playlists here.</p>
+                    <p className="text-sm mt-2">Scan your emotion to see past playlists here.</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
