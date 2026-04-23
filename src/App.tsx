@@ -124,17 +124,16 @@ export default function App() {
     setCurrentSongUrl(topSong.songUrl);
     setRecommendedPlaylist(playlist);
     setIsRedirecting(true);
-    setCountdown(1); // Reduced from 3 to 1 for faster suggestion/opening
+    setCountdown(3);
 
     // Countdown logic
-    let currentCount = 1;
+    let currentCount = 3;
     const interval = setInterval(() => {
       currentCount -= 1;
       setCountdown(currentCount);
       if (currentCount <= 0) {
         clearInterval(interval);
-        window.open(topSong.songUrl, '_blank'); // Open in new tab so they don't lose the app
-        setIsRedirecting(false); // Reset UI so they can see the play button if they return
+        window.location.href = topSong.songUrl;
       }
     }, 1000);
   };
