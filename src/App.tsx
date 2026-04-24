@@ -151,7 +151,7 @@ export default function App() {
     
     const apiKey = getApiKey();
     if (!apiKey) {
-      throw new Error("API Key is missing. For local testing, add VITE_GEMINI_API_KEY to your .env file. For Vercel/Netlify, add VITE_GEMINI_API_KEY to your project's Environment Variables settings.");
+      throw new Error("API Key is missing. For local testing, add VITE_GEMINI_API_KEY to your .env file. For GitHub Pages, add VITE_GEMINI_API_KEY to your GitHub repository's Actions Secrets.");
     }
 
     const ai = new GoogleGenAI({ apiKey });
