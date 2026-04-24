@@ -6,4 +6,4 @@ This project is developed as part of an MCA Final Year Project using React.js.
 <h2>👨‍💻 Author</h2>
 
 <b>Nishu (Nisha Sharma)<br>
-MCA Final Year Student
+MCA 2nd Year Student
