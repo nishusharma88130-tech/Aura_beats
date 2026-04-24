@@ -133,7 +133,25 @@ export default function App() {
       setCountdown(currentCount);
       if (currentCount <= 0) {
         clearInterval(interval);
-        window.location.href = topSong.songUrl;
+        
+        // Check if user is on a mobile device (tablet or smartphone)
+        const isMobileOrTablet = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobileOrTablet) {
+          // On mobile devices, assigning to window.location.href naturally prompts 
+          // the OS to check if a corresponding Native App is installed (YouTube, Spotify, etc.)
+          // due to the platforms' Universal/App Links configuration.
+          window.location.href = topSong.songUrl;
+        } else {
+          // On Desktop/Laptop PC, we want to open in a new tab so they don't lose the web app
+          window.open(topSong.songUrl, '_blank');
+          
+          // Since we opened a new tab, the user stays on our page, so we reset the redirecting state
+          // after a slight delay, allowing them to scan again without refreshing.
+          setTimeout(() => {
+             setIsRedirecting(false);
+          }, 1000);
+        }
       }
     }, 1000);
   };
